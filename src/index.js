@@ -654,8 +654,7 @@ VanillaPinchZoom.prototype = {
             'mozTransformOrigin': '0% 0%',
             'msTransformOrigin': '0% 0%',
             'oTransformOrigin': '0% 0%',
-            'transformOrigin': '0% 0%',
-            'position': 'absolute'
+            'transformOrigin': '0% 0%'
         });
     },
 
@@ -712,8 +711,17 @@ VanillaPinchZoom.prototype = {
                     'mozTransformOrigin': '0% 0%',
                     'msTransformOrigin': '0% 0%',
                     'oTransformOrigin': '0% 0%',
-                    'transformOrigin': '0% 0%',
+                    'transformOrigin': '0% 0%'
+                });
+            }
+            if(zoomFactor!=1) {
+                assign(elStyles, {
                     'position': 'absolute'
+                });
+            }
+            else {
+                assign(elStyles, {
+                    'position': 'static'
                 });
             }
 
