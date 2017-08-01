@@ -157,13 +157,26 @@ function detectGestures(el, target) {
         }
     });
 
+    el.addEventListener('mousewheel', function (event) {
+        var scale = 1;
+        if(event.wheelDelta>0) {
+            scale = 1.1;
+        }
+        else if (target.zoomFactor > 1) {
+            scale = 0.9;
+        }
+        target.scaleZoomFactor(scale);
+        cancelEvent(event);
+        target.update();
+    }, false);
+
     el.addEventListener('touchend', function (event) {
         if(target.enabled) {
             fingers = event.touches.length;
             updateInteraction(event);
         }
     });
-};
+}
 
 function VanillaPinchZoom(el, options) {
     this.el = el;
@@ -681,7 +694,7 @@ VanillaPinchZoom.prototype = {
      * Updates the css values according to the current zoom factor and offset
      */
     update: function () {
-        var elStyles = {};
+        var elStyles = {}, context =this;
         if (this.updatePlaned) {
             return;
         }
@@ -698,6 +711,7 @@ VanillaPinchZoom.prototype = {
                     'translate3d(' + offsetX    + 'px,' + offsetY    + 'px,0px)',
                 transform2d =   'scale('       + zoomFactor + ', '  + zoomFactor + ') ' +
                     'translate('   + offsetX    + 'px,' + offsetY    + 'px)',
+
                 removeClone = (function () {
                     if (this.clone) {
                         this.clone.parentNode.removeChild(this.clone);
@@ -705,23 +719,15 @@ VanillaPinchZoom.prototype = {
                     }
                 }).bind(this);
 
+
             if (this.options.updateAllElementStyles) {
                 assign(elStyles, {
                     'webkitTransformOrigin': '0% 0%',
                     'mozTransformOrigin': '0% 0%',
                     'msTransformOrigin': '0% 0%',
                     'oTransformOrigin': '0% 0%',
-                    'transformOrigin': '0% 0%'
-                });
-            }
-            if(zoomFactor!=1) {
-                assign(elStyles, {
+                    'transformOrigin': '0% 0%',
                     'position': 'absolute'
-                });
-            }
-            else {
-                assign(elStyles, {
-                    'position': 'static'
                 });
             }
 
@@ -737,7 +743,8 @@ VanillaPinchZoom.prototype = {
                     'oTransform':       transform2d,
                     'msTransform':      transform2d,
                     'mozTransform':     transform2d,
-                    'transform':        transform3d
+                    'transform':        transform3d,
+                    'position': 'absolute'
                 });
                 applyStyles(this.el, elStyles);
             } else {
@@ -748,16 +755,21 @@ VanillaPinchZoom.prototype = {
                     this.clone = this.el.cloneNode(true);
                     this.clone.style.pointerEvents = 'none';
                     this.container.appendChild(this.clone);
-                    setTimeout(removeClone, 200);
+                    setTimeout(removeClone);
                 }
                 assign(elStyles, {
                     'webkit-transform':  transform2d,
                     'oTransform':       transform2d,
                     'msTransform':      transform2d,
                     'mozTransform':     transform2d,
-                    'transform':        transform2d
+                    'transform':        transform2d,
+                    'position':         'absolute'
                 });
                 applyStyles(this.el, elStyles);
+                if(this.el.offsetWidth * zoomFactor < this.container.offsetWidth) {
+                    this.el.style.marginLeft = '50%';
+                    this.el.style.left = '-' + (this.el.offsetWidth * zoomFactor) / 2+ 'px';
+                }
                 this.is3d = false;
             }
         }).bind(this), 0);
