@@ -157,20 +157,21 @@ function detectGestures(el, target) {
         }
     });
 
-    el.addEventListener('mousewheel', function (event) {
-        var scale = 1
-        if(event.wheelDelta>0) {
+    el.addEventListener('wheel', function (event) {
+        var scale = 1;
+        if(event.deltaY>0) {
             scale = 1.1;
         }
         else if (target.zoomFactor > 1) {
             scale = 0.9;
         }
         target.scaleZoomFactor(scale);
+
         cancelEvent(event);
         target.update();
     }, false);
 
-    el.addEventListener('mousedown', function (event) {
+    el.addEventListener('mousedown', function (e) {
         function cancelListeners() {
             document.body.removeEventListener('mouseup', cancelListeners)
             el.removeEventListener('mousemove', handleMouseMove);
@@ -178,10 +179,10 @@ function detectGestures(el, target) {
         }
         function handleMouseMove(e) {
             if (target.zoomFactor > 1.0) {
-                var touch = {x:e.offsetX, y:e.offsetY}
+                var touch = {x:e.clientX, y:e.clientY};
                 target.drag(touch, target.lastDragPosition);
                 target.lastDragPosition = touch;
-                cancelEvent(event);
+                cancelEvent(e);
                 target.update();
             }
         }
