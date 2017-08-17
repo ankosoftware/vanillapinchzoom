@@ -793,6 +793,20 @@ VanillaPinchZoom.prototype = {
                 }
                 this.is3d = false;
             }
+            if(zoomFactor <= 1) {
+                transform2d = 'scale(1, 1) translate(0, 0)';
+                assign(elStyles, {
+                    'webkit-transform':  transform2d,
+                    'oTransform':       transform2d,
+                    'msTransform':      transform2d,
+                    'mozTransform':     transform2d,
+                    'transform':        transform2d,
+                    'position': 'relative',
+                    'marginLeft': 'auto',
+                    'left': '0'
+                });
+                applyStyles(this.el, elStyles);
+            }
         }).bind(this), 0);
     },
 
