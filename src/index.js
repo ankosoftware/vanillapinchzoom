@@ -178,14 +178,12 @@ function detectGestures(el, target) {
     var isIE11 = navigator.userAgent.match(/Trident\/7\./);
 
     el.addEventListener(isIE11 ? 'pointerdown' : 'mousedown', function (e) {
-        console.log('mousedown');
         function cancelListeners() {
             document.body.removeEventListener(isIE11 ? 'pointerup' : 'mouseup', cancelListeners)
             el.removeEventListener(isIE11 ? 'pointermove':'mousemove', handleMouseMove);
             target.lastDragPosition = false;
         }
         function handleMouseMove(e) {
-            console.log('mousemove');
             if (target.zoomFactor > 1.0) {
                 var touch = {x:e.clientX, y:e.clientY};
                 target.drag(touch, target.lastDragPosition);
