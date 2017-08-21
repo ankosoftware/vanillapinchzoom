@@ -161,14 +161,16 @@ function detectGestures(el, target) {
 
     el.addEventListener('wheel', function (event) {
         var scale = 1;
-        if(event.deltaY>0) {
-            scale = 1.1;
+        if(event.deltaY < 0) {
+            scale = 1.01;
         }
         else if (target.zoomFactor > 1) {
-            scale = 0.9;
+            scale = 0.99;
         }
+        var touch1 = {x:event.clientX, y:event.clientY};
         target.scaleZoomFactor(scale);
-
+        var touch2 = {x:event.clientX/scale + ((event.clientX-event.clientX/scale)/2), y:event.clientY/scale};
+        target.drag(touch2, touch1);
         cancelEvent(event);
         target.update();
     }, false);
