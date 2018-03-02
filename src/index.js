@@ -1,7 +1,5 @@
 var assign = require('object-assign');
 
-
-
 function createEvent(name, data) {
     data = data || {};
     if (window.CustomEvent) {
@@ -241,7 +239,8 @@ VanillaPinchZoom.prototype = {
         dragEndEventName: 'pz_dragend',
         doubleTapEventName: 'pz_doubletap',
         zoomInEventName: 'pz_zoomin',
-        zoomOutEventName: 'pz_zoomout'
+        zoomOutEventName: 'pz_zoomout',
+        updatedEventName: 'pz_updated'
     },
 
     /**
@@ -419,10 +418,27 @@ VanillaPinchZoom.prototype = {
                 }
             }
             else {
-                this.addOffset({
-                    y: -(center.y - lastCenter.y),
-                    x: -(center.x - lastCenter.x)
-                });
+                const maxOffset = {
+                    x: (this.zoomFactor - 1) * this.getContainerX(),
+                    y: (this.zoomFactor - 1) * this.getContainerY()
+                };
+
+                const nextOffset = {
+                    x: this.offset.x - (center.x - lastCenter.x),
+                    y: this.offset.y - (center.y - lastCenter.y)
+                };
+
+                if (nextOffset.x >= 0 && nextOffset.x <= maxOffset.x) {
+                    this.offset.x -= center.x - lastCenter.x;
+                } else if (nextOffset.x >= maxOffset.x) {
+                    this.offset.x = maxOffset.x;
+                }
+
+                if (nextOffset.y >= 0 && nextOffset.y <= maxOffset.y) {
+                    this.offset.y -= center.y - lastCenter.y;
+                } else if (nextOffset.y >= maxOffset.y) {
+                    this.offset.y = maxOffset.y;
+                }
             }
         }
     },
@@ -814,6 +830,8 @@ VanillaPinchZoom.prototype = {
                 });
                 applyStyles(this.el, elStyles);
             }
+
+            this.el.dispatchEvent(createEvent(this.options.updatedEventName));
         }).bind(this), 0);
     },
 
