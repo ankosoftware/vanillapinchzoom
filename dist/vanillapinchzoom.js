@@ -186,36 +186,41 @@ function detectGestures(el, target) {
         }
     });
 
-    el.addEventListener('mousewheel', function (event) {
+    el.addEventListener('wheel', function (event) {
         var scale = 1;
-        if(event.wheelDelta>0) {
-            scale = 1.1;
+        if(event.deltaY < 0) {
+            scale = 1.01;
         }
         else if (target.zoomFactor > 1) {
-            scale = 0.9;
+            scale = 0.99;
         }
+        var touch1 = {x:event.clientX, y:event.clientY};
         target.scaleZoomFactor(scale);
+        var touch2 = {x:event.clientX/scale + ((event.clientX-event.clientX/scale)/2), y:event.clientY/scale};
+        target.drag(touch2, touch1);
         cancelEvent(event);
         target.update();
     }, false);
 
-    el.addEventListener('mousedown', function (event) {
+    var isIE11 = navigator.userAgent.match(/Trident\/7\./);
+
+    el.addEventListener(isIE11 ? 'pointerdown' : 'mousedown', function (e) {
         function cancelListeners() {
-            document.body.removeEventListener('mouseup', cancelListeners)
-            el.removeEventListener('mousemove', handleMouseMove);
+            document.body.removeEventListener(isIE11 ? 'pointerup' : 'mouseup', cancelListeners)
+            el.removeEventListener(isIE11 ? 'pointermove':'mousemove', handleMouseMove);
             target.lastDragPosition = false;
         }
         function handleMouseMove(e) {
             if (target.zoomFactor > 1.0) {
-                var touch = {x:e.offsetX, y:e.offsetY}
+                var touch = {x:e.clientX, y:e.clientY};
                 target.drag(touch, target.lastDragPosition);
                 target.lastDragPosition = touch;
-                cancelEvent(event);
+                cancelEvent(e);
                 target.update();
             }
         }
-        document.body.addEventListener('mouseup', cancelListeners, false);
-        el.addEventListener('mousemove', handleMouseMove, false);
+        document.body.addEventListener(isIE11 ? 'pointerup' : 'mouseup', cancelListeners, false);
+        el.addEventListener(isIE11 ? 'pointermove':'mousemove', handleMouseMove, false);
     }, false);
 
 
@@ -263,7 +268,8 @@ VanillaPinchZoom.prototype = {
         dragEndEventName: 'pz_dragend',
         doubleTapEventName: 'pz_doubletap',
         zoomInEventName: 'pz_zoomin',
-        zoomOutEventName: 'pz_zoomout'
+        zoomOutEventName: 'pz_zoomout',
+        updatedEventName: 'pz_updated'
     },
 
     /**
@@ -441,10 +447,27 @@ VanillaPinchZoom.prototype = {
                 }
             }
             else {
-                this.addOffset({
-                    y: -(center.y - lastCenter.y),
-                    x: -(center.x - lastCenter.x)
-                });
+                const maxOffset = {
+                    x: (this.zoomFactor - 1) * this.getContainerX(),
+                    y: (this.zoomFactor - 1) * this.getContainerY()
+                };
+
+                const nextOffset = {
+                    x: this.offset.x - (center.x - lastCenter.x),
+                    y: this.offset.y - (center.y - lastCenter.y)
+                };
+
+                if (nextOffset.x >= 0 && nextOffset.x <= maxOffset.x) {
+                    this.offset.x -= center.x - lastCenter.x;
+                } else if (nextOffset.x >= maxOffset.x) {
+                    this.offset.x = maxOffset.x;
+                }
+
+                if (nextOffset.y >= 0 && nextOffset.y <= maxOffset.y) {
+                    this.offset.y -= center.y - lastCenter.y;
+                } else if (nextOffset.y >= maxOffset.y) {
+                    this.offset.y = maxOffset.y;
+                }
             }
         }
     },
@@ -836,6 +859,8 @@ VanillaPinchZoom.prototype = {
                 });
                 applyStyles(this.el, elStyles);
             }
+
+            this.el.dispatchEvent(createEvent(this.options.updatedEventName));
         }).bind(this), 0);
     },
 
